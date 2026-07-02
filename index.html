@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Tamponmania Edition</title>
+<title>Tamponmania</title>
 <style>
 body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; margin: 0;
   background: linear-gradient(135deg, #ffe0e9 0%, #fff5f8 40%, #fce4ec 100%);
@@ -187,14 +187,14 @@ h1 { color: #ad1457; text-shadow: 2px 2px 4px rgba(173,20,87,0.2); font-size: 2.
 
 <div id="loadingScreen">
   <div class="loadingIcon">🧻</div>
-  <h2>Tamponmania Edition wird geladen...</h2>
+  <h2>Tamponmania wird geladen...</h2>
   <div id="loadingBarOuter"><div id="loadingBarInner"></div></div>
   <p id="loadingText">0%</p>
 </div>
 
 <button id="musicToggle">🔇</button>
 <div id="game">
-<h1>🩸 Tamponmania Edition 🩸</h1>
+<h1> Tamponmania </h1>
 <div id="count">0</div>
 <div id="cps">0 Tampons/Sekunde</div>
 <div id="clickBtn">
@@ -235,15 +235,15 @@ let critMultiplier = 10;
 let passiveMultiplier = 1;
 
 const upgrades = [
-  { name: "Praktikantin", baseCost: 8, cps: 0.1, owned: 0, desc: "produziert langsam Tampons" },
+  { name: "Praktikantin", baseCost: 8, cps: 0.1, owned: 0, desc: "dreht Tampons von Hand" },
   { name: "Fabrikarbeiter", baseCost: 45, cps: 1, owned: 0, desc: "automatisiert die Produktion" },
   { name: "Verpackungsmaschine", baseCost: 220, cps: 5, owned: 0, desc: "verpackt im Akkord" },
   { name: "Fließband", baseCost: 1200, cps: 25, owned: 0, desc: "massenhaft Tampons" },
-  { name: "Fabrik-Automatisierung", baseCost: 6000, cps: 100, owned: 0, desc: "vollautomatische Fabrik" },
-  { name: "KI-gesteuerte Anlage", baseCost: 30000, cps: 500, owned: 0, desc: "KI optimiert die Produktion" },
-  { name: "Regionale Zweigfabrik", baseCost: 150000, cps: 2500, owned: 0, desc: "eine ganze Fabrik nur für dich" },
+  { name: "Fabrik-Automatisierung", baseCost: 6000, cps: 100, owned: 0, desc: "vollautomatische Tampon-Fabrik" },
+  { name: "KI-gesteuerte Anlage", baseCost: 30000, cps: 500, owned: 0, desc: "KI optimiert die Tampon-Produktion" },
+  { name: "Regionale Zweigfabrik", baseCost: 150000, cps: 2500, owned: 0, desc: "eine ganze Tampon-Fabrik nur für dich" },
   { name: "Globales Vertriebsnetz", baseCost: 750000, cps: 12000, owned: 0, desc: "Tampons werden weltweit produziert" },
-  { name: "Weltraum-Produktionsstation", baseCost: 3500000, cps: 60000, owned: 0, desc: "Schwerelose Massenproduktion im Orbit" },
+  { name: "Weltraum-Produktionsstation", baseCost: 3500000, cps: 60000, owned: 0, desc: "Schwerelose Tamponproduktion im Orbit" },
   { name: "Quantenfabrikator", baseCost: 18000000, cps: 300000, owned: 0, desc: "erschafft Tampons aus reiner Quantenenergie" }
 ];
 
@@ -282,11 +282,11 @@ const specialUpgrades = [
   },
   {
     id: "autoclicker",
-    name: "Auto-Klicker",
-    cost: 150000,
+    name: "67-Mode",
+    cost: 10000,
     owned: false,
-    desc: "Simuliert 5 automatische Klicks pro Sekunde",
-    effect: () => { cps += 5 * clickMultiplier; }
+    desc: "Simuliert 67 automatische Klicks pro Sekunde",
+    effect: () => { cps += 67 * clickMultiplier; }
   },
   {
     id: "megacrit",
