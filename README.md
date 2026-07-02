@@ -5,3 +5,5 @@ Additionaly, you can spend Tampons on Upgrades, that help
 producing Tampons. We are working on making the game more 
 addicting - i mean more fun... 
 
+Tamponmania is perfect for having fun and laugh with your 
+non-existent friends. 
