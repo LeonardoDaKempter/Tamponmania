@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Tamponmania Edition</title>
+<style>
+body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; margin: 0;
+  background: linear-gradient(135deg, #ffe0e9 0%, #fff5f8 40%, #fce4ec 100%);
+  background-attachment: fixed; min-height: 100vh; }
+h1 { color: #ad1457; text-shadow: 2px 2px 4px rgba(173,20,87,0.2); font-size: 2.5em; letter-spacing: 1px; margin-top: 20px; }
+
+#loadingScreen {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: #c2185b; color: white; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; z-index: 999;
+  transition: opacity 0.5s ease;
+}
+#loadingScreen h2 { font-size: 2em; }
+#loadingBarOuter { width: 300px; height: 25px; background: #f8bbd0; border-radius: 15px; overflow: hidden; margin-top: 20px; }
+#loadingBarInner { width: 0%; height: 100%; background: white; transition: width 0.2s; }
+.loadingIcon { font-size: 5em; animation: spin 1.2s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+
+#game { display: none; }
+
+#clickBtn { cursor: pointer; user-select: none; display: inline-block; width: 220px; height: 320px; position: relative; transition: transform 0.1s; animation: float 2s ease-in-out infinite; filter: drop-shadow(0 10px 6px rgba(0,0,0,0.3)); }
+#clickBtn:active { transform: scale(0.9); }
+#clickBtn:hover { transform: scale(1.05); }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+.tampon-body {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95px;
+  height: 220px;
+  background: linear-gradient(90deg,
+    #d4c3ae 0%, #e8dcc8 8%, #f7f0e3 25%, #fffcf5 50%,
+    #f7f0e3 75%, #e8dcc8 92%, #d4c3ae 100%);
+  border-radius: 48px 48px 20px 20px;
+  box-shadow:
+    inset -16px 0 22px rgba(120,90,60,0.18),
+    inset 8px 0 12px rgba(255,255,255,0.7),
+    inset 0 -8px 10px rgba(120,90,60,0.12),
+    0 10px 14px rgba(0,0,0,0.2);
+}
+
+.tampon-body::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 6px;
+  right: 6px;
+  bottom: 10px;
+  border-radius: 42px 42px 16px 16px;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(120,90,60,0.05) 0px, rgba(120,90,60,0.05) 1.5px, transparent 1.5px, transparent 5px),
+    repeating-linear-gradient(90deg, rgba(120,90,60,0.03) 0px, rgba(120,90,60,0.03) 1px, transparent 1px, transparent 8px);
+}
+
+.tampon-body::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: linear-gradient(180deg, rgba(120,90,60,0.15), transparent);
+  border-radius: 48px 48px 0 0;
+}
+
+.tampon-tip {
+  position: absolute;
+  bottom: 205px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 78px;
+  height: 48px;
+  background: radial-gradient(ellipse at 35% 25%, #fffcf5 0%, #ede2cc 55%, #cbb897 100%);
+  border-radius: 50% 50% 8px 8px;
+  box-shadow:
+    inset -8px -6px 12px rgba(120,90,60,0.25),
+    inset 4px 4px 8px rgba(255,255,255,0.5);
+}
+
+.tampon-tip::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 3px;
+  background: rgba(120,90,60,0.15);
+  border-radius: 2px;
+}
+
+.tampon-string {
+  position: absolute;
+  bottom: -38px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2.5px;
+  height: 48px;
+  background: linear-gradient(180deg, #f0e8d8, #c9bda3);
+  border-radius: 1.5px;
+  animation: wiggle 1.3s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+.tampon-string::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 4.5px;
+  height: 48px;
+  background: repeating-linear-gradient(180deg, transparent 0px, transparent 3px, rgba(120,90,60,0.2) 3px, rgba(120,90,60,0.2) 4px);
+}
+
+.tampon-string::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 35% 35%, #f5ecd9, #cbbc9d);
+  border-radius: 50%;
+  box-shadow: inset -2px -2px 3px rgba(120,90,60,0.3);
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: translateX(-50%) rotate(-5deg); }
+  50% { transform: translateX(-50%) rotate(5deg); }
+}
+
+.tampon-blood {
+  position: absolute;
+  top: -4px;
+  left: 60%;
+  transform: translateX(-50%);
+  font-size: 2em;
+  filter: drop-shadow(0 3px 4px rgba(120,0,0,0.5)) saturate(1.3);
+  animation: drip 1.6s ease-in-out infinite;
+}
+
+@keyframes drip {
+  0%, 100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateX(-50%) translateY(5px) scale(1.08); opacity: 0.9; }
+}
+  50% { transform: translateX(-50%) translateY(4px) scale(1.1); opacity: 0.85; }
+}
+  50% { transform: translateX(-50%) scale(1.15); opacity: 0.8; }
+}
+
+.shop { margin-top: 30px; padding: 0 20px; }
+.shop h2 { color: #6a1b9a; text-shadow: 1px 1px 2px rgba(106,27,154,0.2); }
+.item {
+  display: inline-block; margin: 10px; padding: 18px; border-radius: 16px;
+  background: linear-gradient(145deg, #ffffff, #fff0f5);
+  width: 220px; vertical-align: top;
+  box-shadow: 0 4px 10px rgba(236,64,122,0.2), inset 0 0 0 2px #f8bbd0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.item:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(236,64,122,0.3), inset 0 0 0 2px #ec407a; }
+.item.special {
+  background: linear-gradient(145deg, #ffffff, #f3e5f5);
+  box-shadow: 0 4px 10px rgba(106,27,154,0.25), inset 0 0 0 2px #ce93d8;
+}
+.item.special:hover { box-shadow: 0 8px 16px rgba(106,27,154,0.35), inset 0 0 0 2px #6a1b9a; }
+.item strong { color: #ad1457; font-size: 1.1em; }
+.item.special strong { color: #6a1b9a; }
+.item button {
+  background: linear-gradient(145deg, #ec407a, #c2185b); color: white; border: none;
+  padding: 9px 14px; border-radius: 10px; cursor: pointer; font-weight: bold;
+  box-shadow: 0 3px 6px rgba(194,24,91,0.4); margin-top: 6px;
+}
+.item button:hover:not(:disabled) { filter: brightness(1.1); }
+.item.special button { background: linear-gradient(145deg, #8e24aa, #6a1b9a); box-shadow: 0 3px 6px rgba(106,27,154,0.4); }
+.item button:disabled { background: #ddd; box-shadow: none; cursor: not-allowed; color: #999; }
+#count {
+  font-size: 2.5em; font-weight: bold; color: #ad1457;
+  text-shadow: 1px 1px 3px rgba(173,20,87,0.25);
+}
+#cps { color: #8e5a70; font-size: 1.1em; margin-bottom: 10px; }
+.owned-badge { color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 4px 10px; border-radius: 8px; display: inline-block; }
+
+#musicToggle {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: #c2185b;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  font-size: 1.5em;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="loadingIcon">🧻</div>
+  <h2>Tamponmania Edition wird geladen...</h2>
+  <div id="loadingBarOuter"><div id="loadingBarInner"></div></div>
+  <p id="loadingText">0%</p>
+</div>
+
+<button id="musicToggle">🔇</button>
+<div id="game">
+<h1>🩸 Tamponmania Edition 🩸</h1>
+<div id="count">0</div>
+<div id="cps">0 Tampons/Sekunde</div>
+<div id="clickBtn">
+  <div class="tampon-blood">🩸</div>
+  <div class="tampon-tip"></div>
+  <div class="tampon-body"></div>
+  <div class="tampon-string"></div>
+</div>
+
+<div class="shop" id="shop"></div>
+<div class="shop" id="specialShop"><h2 style="color:#6a1b9a;">✨ Spezial-Upgrades ✨</h2><div id="specialItems"></div></div>
+</div>
+
+<script>
+let progress = 0;
+const loadInterval = setInterval(() => {
+  progress += Math.random() * 15 + 5;
+  if (progress >= 100) {
+    progress = 100;
+    clearInterval(loadInterval);
+    setTimeout(() => {
+      document.getElementById('loadingScreen').style.opacity = 0;
+      setTimeout(() => {
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('game').style.display = 'block';
+      }, 500);
+    }, 300);
+  }
+  document.getElementById('loadingBarInner').style.width = progress + '%';
+  document.getElementById('loadingText').textContent = Math.floor(progress) + '%';
+}, 200);
+
+let tampons = 0;
+let cps = 0;
+let critChance = 0;
+let clickMultiplier = 1;
+let critMultiplier = 10;
+let passiveMultiplier = 1;
+
+const upgrades = [
+  { name: "Praktikantin", baseCost: 8, cps: 0.1, owned: 0, desc: "produziert langsam Tampons" },
+  { name: "Fabrikarbeiter", baseCost: 45, cps: 1, owned: 0, desc: "automatisiert die Produktion" },
+  { name: "Verpackungsmaschine", baseCost: 220, cps: 5, owned: 0, desc: "verpackt im Akkord" },
+  { name: "Fließband", baseCost: 1200, cps: 25, owned: 0, desc: "massenhaft Tampons" },
+  { name: "Fabrik-Automatisierung", baseCost: 6000, cps: 100, owned: 0, desc: "vollautomatische Fabrik" },
+  { name: "KI-gesteuerte Anlage", baseCost: 30000, cps: 500, owned: 0, desc: "KI optimiert die Produktion" },
+  { name: "Regionale Zweigfabrik", baseCost: 150000, cps: 2500, owned: 0, desc: "eine ganze Fabrik nur für dich" },
+  { name: "Globales Vertriebsnetz", baseCost: 750000, cps: 12000, owned: 0, desc: "Tampons werden weltweit produziert" },
+  { name: "Weltraum-Produktionsstation", baseCost: 3500000, cps: 60000, owned: 0, desc: "Schwerelose Massenproduktion im Orbit" },
+  { name: "Quantenfabrikator", baseCost: 18000000, cps: 300000, owned: 0, desc: "erschafft Tampons aus reiner Quantenenergie" }
+];
+
+const specialUpgrades = [
+  {
+    id: "critical",
+    name: "Critical Hit",
+    cost: 1200,
+    owned: false,
+    desc: "10% Chance, dass jeder Tick (Klick oder passiv) 10x zählt",
+    effect: () => { critChance += 0.10; }
+  },
+  {
+    id: "kordon",
+    name: "Kordon Mode",
+    cost: 5000,
+    owned: false,
+    desc: "Klicks UND passive Produktion zählen doppelt, für immer",
+    effect: () => { clickMultiplier *= 2; passiveMultiplier *= 2; }
+  },
+  {
+    id: "supercrit",
+    name: "Super Critical",
+    cost: 25000,
+    owned: false,
+    desc: "Weitere 15% Krit-Chance, wirkt auch passiv",
+    effect: () => { critChance += 0.15; }
+  },
+  {
+    id: "goldenperiod",
+    name: "Goldene Periode",
+    cost: 70000,
+    owned: false,
+    desc: "Klick- und Passiv-Multiplikator werden erneut verdoppelt",
+    effect: () => { clickMultiplier *= 2; passiveMultiplier *= 2; }
+  },
+  {
+    id: "autoclicker",
+    name: "Auto-Klicker",
+    cost: 150000,
+    owned: false,
+    desc: "Simuliert 5 automatische Klicks pro Sekunde",
+    effect: () => { cps += 5 * clickMultiplier; }
+  },
+  {
+    id: "megacrit",
+    name: "Mega Critical",
+    cost: 500000,
+    owned: false,
+    desc: "Kritische Treffer zählen jetzt 25x statt 10x, auch passiv",
+    effect: () => { critMultiplier = 25; }
+  },
+  {
+    id: "diddyparty",
+    name: "Diddy Party",
+    cost: 1000000,
+    owned: false,
+    desc: "Wilde Party-Boost: verdreifacht dauerhaft ALLE Produktionswerte (Klick + passiv)",
+    effect: () => { clickMultiplier *= 3; passiveMultiplier *= 3; }
+  }
+];
+
+const countEl = document.getElementById('count');
+const cpsEl = document.getElementById('cps');
+const shopEl = document.getElementById('shop');
+const specialItemsEl = document.getElementById('specialItems');
+const clickBtn = document.getElementById('clickBtn');
+
+function cost(u) {
+  return Math.floor(u.baseCost * Math.pow(1.15, u.owned));
+}
+
+let shopBuilt = false;
+let specialShopBuilt = false;
+
+function buildShop() {
+  shopEl.innerHTML = '';
+  upgrades.forEach((u, i) => {
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<strong>${u.name}</strong><br>${u.desc}<br>+${u.cps} pro Sekunde<br>
+      <span class="ownedCount">Besitz: 0</span><br>
+      <button class="buyBtn">Kaufen (0)</button>`;
+    const btn = div.querySelector('.buyBtn');
+    btn.addEventListener('click', () => buy(i));
+    shopEl.appendChild(div);
+  });
+  shopBuilt = true;
+}
+
+function buildSpecialShop() {
+  specialItemsEl.innerHTML = '';
+  specialUpgrades.forEach((u, i) => {
+    const div = document.createElement('div');
+    div.className = 'item special';
+    div.innerHTML = `<strong>${u.name}</strong><br>${u.desc}<br>
+      <span class="specialStatus"></span>`;
+    specialItemsEl.appendChild(div);
+  });
+  specialShopBuilt = true;
+}
+
+function renderShop() {
+  if (!shopBuilt) buildShop();
+  const items = shopEl.querySelectorAll('.item');
+  upgrades.forEach((u, i) => {
+    const c = cost(u);
+    const div = items[i];
+    div.querySelector('.ownedCount').textContent = `Besitz: ${u.owned}`;
+    const btn = div.querySelector('.buyBtn');
+    btn.textContent = `Kaufen (${c})`;
+    btn.disabled = tampons < c;
+  });
+}
+
+function renderSpecialShop() {
+  if (!specialShopBuilt) buildSpecialShop();
+  const items = specialItemsEl.querySelectorAll('.item');
+  specialUpgrades.forEach((u, i) => {
+    const status = items[i].querySelector('.specialStatus');
+    if (u.owned) {
+      status.innerHTML = '<span class="owned-badge">✔ Gekauft</span>';
+    } else {
+      status.innerHTML = `<button class="buySpecialBtn">Kaufen (${u.cost})</button>`;
+      const btn = status.querySelector('.buySpecialBtn');
+      btn.disabled = tampons < u.cost;
+      btn.addEventListener('click', () => buySpecial(i));
+    }
+  });
+}
+
+function buy(i) {
+  const u = upgrades[i];
+  const c = cost(u);
+  if (tampons >= c) {
+    tampons -= c;
+    u.owned++;
+    cps += u.cps;
+    update();
+  }
+}
+
+function buySpecial(i) {
+  const u = specialUpgrades[i];
+  if (!u.owned && tampons >= u.cost) {
+    tampons -= u.cost;
+    u.owned = true;
+    u.effect();
+    update();
+  }
+}
+
+function update() {
+  countEl.textContent = Math.floor(tampons) + " Tampons";
+  cpsEl.textContent = cps.toFixed(1) + " Tampons/Sekunde";
+  renderShop();
+  renderSpecialShop();
+}
+
+clickBtn.addEventListener('click', () => {
+  let gain = 1 * clickMultiplier;
+  if (Math.random() < critChance) {
+    gain *= critMultiplier;
+  }
+  tampons += gain;
+  update();
+});
+
+setInterval(() => {
+  let passiveGain = (cps / 10) * passiveMultiplier;
+  if (Math.random() < critChance) {
+    passiveGain *= critMultiplier;
+  }
+  tampons += passiveGain;
+  update();
+}, 100);
+
+update();
+
+let audioCtx = null;
+let musicPlaying = false;
+let musicIntervals = [];
+
+function startMusic() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const melody = [523.25, 587.33, 659.25, 783.99, 880.00, 783.99, 659.25, 587.33,
+                   523.25, 659.25, 783.99, 1046.50, 880.00, 783.99, 659.25, 523.25];
+  const bassline = [130.81, 130.81, 146.83, 146.83, 164.81, 164.81, 130.81, 130.81];
+
+  let mi = 0;
+  let bi = 0;
+  let step = 0;
+
+  function playMelodyNote() {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.value = melody[mi % melody.length];
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.22);
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 3000;
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.25);
+    mi++;
+  }
+
+  function playBassNote() {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = bassline[bi % bassline.length];
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.09, audioCtx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.28);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+    bi++;
+  }
+
+  function playHiHat() {
+    const bufferSize = audioCtx.sampleRate * 0.03;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let j = 0; j < bufferSize; j++) data[j] = (Math.random() * 2 - 1) * 0.15;
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.03);
+    noise.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+  }
+
+  playMelodyNote();
+  musicIntervals.push(setInterval(playMelodyNote, 220));
+  musicIntervals.push(setInterval(playBassNote, 440));
+  musicIntervals.push(setInterval(playHiHat, 110));
+
+  musicPlaying = true;
+}
+
+function stopMusic() {
+  musicIntervals.forEach(iv => clearInterval(iv));
+  musicIntervals = [];
+  if (audioCtx) audioCtx.close();
+  audioCtx = null;
+  musicPlaying = false;
+}
+
+document.getElementById('musicToggle').addEventListener('click', () => {
+  if (musicPlaying) {
+    stopMusic();
+    document.getElementById('musicToggle').textContent = '🔇';
+  } else {
+    startMusic();
+    document.getElementById('musicToggle').textContent = '🔊';
+  }
+});
+</script>
+</body>
+</html>
