@@ -318,6 +318,14 @@ body.shake { animation: shake 0.3s; }
 }
 #musicToggle:hover { transform: scale(1.1); }
 
+#resetBtn {
+  position: fixed; top: 15px; left: 15px;
+  background: #8e24aa; color: white; border: none; border-radius: 50%;
+  width: 48px; height: 48px; font-size: 1.2em; cursor: pointer; z-index: 1000;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3); transition: transform 0.15s;
+}
+#resetBtn:hover { transform: scale(1.1); }
+
 #powerBar {
   display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
   gap: 14px; padding: 12px 22px 20px; margin: 0;
@@ -360,6 +368,21 @@ body.shake { animation: shake 0.3s; }
 #clickBtn.power-lucky .tampon-body::after {
   background: linear-gradient(180deg, rgba(255,215,0,0.45), transparent);
 }
+#clickBtn.power-goldrush .tampon-body {
+  box-shadow: inset -16px 0 22px rgba(255,193,7,0.3), inset 8px 0 12px rgba(255,253,231,0.85), 0 0 30px rgba(255,215,0,0.7), 0 0 70px rgba(255,193,7,0.35);
+}
+#clickBtn.power-timewarp .tampon-body {
+  box-shadow: inset -16px 0 22px rgba(0,188,212,0.3), inset 8px 0 12px rgba(224,247,250,0.85), 0 0 28px rgba(0,229,255,0.65), 0 0 70px rgba(0,188,212,0.3);
+}
+#clickBtn.power-hypercrit .tampon-body {
+  box-shadow: inset -16px 0 22px rgba(156,39,176,0.32), inset 8px 0 12px rgba(243,229,245,0.85), 0 0 30px rgba(213,0,249,0.7), 0 0 70px rgba(156,39,176,0.35);
+}
+#clickBtn.power-sugarhigh .tampon-body {
+  box-shadow: inset -16px 0 22px rgba(255,64,129,0.32), inset 8px 0 12px rgba(255,255,255,0.9), 0 0 30px rgba(255,105,180,0.7), 0 0 70px rgba(255,64,129,0.35);
+}
+#clickBtn.power-bloodmoon .tampon-body {
+  box-shadow: inset -16px 0 22px rgba(183,28,28,0.45), inset 8px 0 12px rgba(255,205,210,0.7), 0 0 34px rgba(211,47,47,0.8), 0 0 80px rgba(183,28,28,0.45);
+}
 </style>
 </head>
 <body>
@@ -376,6 +399,7 @@ body.shake { animation: shake 0.3s; }
 <div id="critFlash"></div>
 <div id="toast"></div>
 <button id="musicToggle">🔇</button>
+<button id="resetBtn" title="Spielstand zurücksetzen">🗑️</button>
 
 <div id="game">
 <h1>🩸Tamponmania</h1>
@@ -449,7 +473,12 @@ const activePowers = {};
 const powerUps = [
   { id: 'frenzy', name: 'Klickrausch', cost: 3500, duration: 20, desc: '5x Klick-Power für 20 Sekunden', activate: () => ({ clickMultiplierMult: 5 }) },
   { id: 'overdrive', name: 'Produktionsrausch', cost: 12000, duration: 25, desc: '4x passive Produktion für 25 Sekunden', activate: () => ({ passiveMultiplierMult: 4 }) },
-  { id: 'lucky', name: 'Glücksphase', cost: 18000, duration: 18, desc: '+35% Krit-Chance für 18 Sekunden', activate: () => ({ critChanceBonus: 0.35 }) }
+  { id: 'lucky', name: 'Glücksphase', cost: 18000, duration: 18, desc: '+35% Krit-Chance für 18 Sekunden', activate: () => ({ critChanceBonus: 0.35 }) },
+  { id: 'goldrush', name: 'Goldrausch', cost: 90000, duration: 15, desc: '3x Klick UND 3x Produktion für 15 Sekunden', activate: () => ({ clickMultiplierMult: 3, passiveMultiplierMult: 3 }) },
+  { id: 'hypercrit', name: 'Hyper-Krit', cost: 200000, duration: 15, desc: 'Kritische Treffer zählen 3x so viel + 20% Krit-Chance für 15s', activate: () => ({ critMultiplierMult: 3, critChanceBonus: 0.20 }) },
+  { id: 'timewarp', name: 'Zeitraffer', cost: 600000, duration: 12, desc: '8x passive Produktion für 12 Sekunden', activate: () => ({ passiveMultiplierMult: 8 }) },
+  { id: 'sugarhigh', name: 'Zuckerschock', cost: 1500000, duration: 20, desc: '7x Klick-Power für 20 Sekunden', activate: () => ({ clickMultiplierMult: 7 }) },
+  { id: 'bloodmoon', name: 'Blutmond 🌑', cost: 6000000, duration: 30, desc: 'ALLES x6 (Klick + Produktion) und +25% Krit für 30 Sekunden', activate: () => ({ clickMultiplierMult: 6, passiveMultiplierMult: 6, critChanceBonus: 0.25 }) }
 ];
 
 /* combo */
@@ -542,7 +571,7 @@ const toastEl = document.getElementById('toast');
 const powerBarEl = document.getElementById('powerBar');
 const activePowerUpsEl = document.getElementById('activePowerUps');
 
-function cost(u) { return Math.floor(u.baseCost * Math.pow(1.15, u.owned)); }
+function cost(u) { return Math.floor(u.baseCost * Math.pow(1.19, u.owned)); }
 
 function fmt(n) {
   n = Math.floor(n);
@@ -601,9 +630,10 @@ function getPowerEffects() {
   return Object.values(activePowers).reduce((acc, p) => {
     acc.clickMultiplierMult *= p.clickMultiplierMult || 1;
     acc.passiveMultiplierMult *= p.passiveMultiplierMult || 1;
+    acc.critMultiplierMult *= p.critMultiplierMult || 1;
     acc.critChanceBonus += p.critChanceBonus || 0;
     return acc;
-  }, { clickMultiplierMult: 1, passiveMultiplierMult: 1, critChanceBonus: 0 });
+  }, { clickMultiplierMult: 1, passiveMultiplierMult: 1, critMultiplierMult: 1, critChanceBonus: 0 });
 }
 
 function renderPowerBar() {
@@ -633,9 +663,7 @@ function renderActivePowers() {
     badge.innerHTML = `⚡ ${p.name}<small>${left}s</small>`;
     activePowerUpsEl.appendChild(badge);
   });
-  clickBtn.classList.toggle('power-frenzy', !!activePowers.frenzy);
-  clickBtn.classList.toggle('power-overdrive', !!activePowers.overdrive);
-  clickBtn.classList.toggle('power-lucky', !!activePowers.lucky);
+  powerUps.forEach(p => clickBtn.classList.toggle('power-' + p.id, !!activePowers[p.id]));
 }
 
 function activatePower(i) {
@@ -816,11 +844,11 @@ function toast(msg) {
 /* ---------- clicking ---------- */
 clickBtn.addEventListener('click', (e) => {
   bumpCombo();
-  const comboBonus = 1 + (combo - 1) * 0.05; // small reward for fast clicking
+  const comboBonus = 1 + Math.min((combo - 1) * 0.02, 1.0); // fast-click reward, capped at +100%
   const powerEffects = getPowerEffects();
   let gain = 1 * clickMultiplier * powerEffects.clickMultiplierMult * comboBonus;
   let crit = false;
-  if (Math.random() < Math.min(0.95, critChance + powerEffects.critChanceBonus)) { gain *= critMultiplier; crit = true; }
+  if (Math.random() < Math.min(0.95, critChance + powerEffects.critChanceBonus)) { gain *= critMultiplier * powerEffects.critMultiplierMult; crit = true; }
   tampons += gain;
 
   const rect = clickWrap.getBoundingClientRect();
@@ -837,7 +865,7 @@ clickBtn.addEventListener('click', (e) => {
 setInterval(() => {
   const powerEffects = getPowerEffects();
   let passiveGain = (cps / 10) * passiveMultiplier * powerEffects.passiveMultiplierMult;
-  if (Math.random() < Math.min(0.95, critChance + powerEffects.critChanceBonus)) { passiveGain *= critMultiplier; }
+  if (Math.random() < Math.min(0.95, critChance + powerEffects.critChanceBonus)) { passiveGain *= critMultiplier * powerEffects.critMultiplierMult; }
   tampons += passiveGain;
   update();
 }, 100);
@@ -855,7 +883,72 @@ setInterval(() => {
   }
 }, 500);
 
+/* ---------- save system (Spielstandsspeicher) ---------- */
+const SAVE_KEY = 'tamponmania_save_v1';
+
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      tampons, cps, critChance, clickMultiplier, critMultiplier, passiveMultiplier,
+      upgrades: upgrades.map(u => u.owned),
+      specials: specialUpgrades.map(u => u.owned),
+      skinsOwned: skins.map(s => s.owned),
+      activeSkin, msIndex,
+      activePowers,
+      savedAt: Date.now()
+    }));
+  } catch (e) { /* localStorage voll oder blockiert – ignorieren */ }
+}
+
+function loadGame() {
+  let raw;
+  try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { return; }
+  if (!raw) return;
+  let d;
+  try { d = JSON.parse(raw); } catch (e) { return; }
+
+  tampons = d.tampons || 0;
+  cps = d.cps || 0;
+  critChance = d.critChance || 0;
+  clickMultiplier = d.clickMultiplier || 1;
+  critMultiplier = d.critMultiplier || 10;
+  passiveMultiplier = d.passiveMultiplier || 1;
+
+  if (Array.isArray(d.upgrades)) d.upgrades.forEach((o, i) => { if (upgrades[i]) upgrades[i].owned = o; });
+  if (Array.isArray(d.specials)) d.specials.forEach((o, i) => { if (specialUpgrades[i]) specialUpgrades[i].owned = o; });
+  if (Array.isArray(d.skinsOwned)) d.skinsOwned.forEach((o, i) => { if (skins[i]) skins[i].owned = o; });
+  if (typeof d.msIndex === 'number') msIndex = d.msIndex;
+
+  // restore only power-ups that are still running
+  if (d.activePowers) {
+    Object.entries(d.activePowers).forEach(([id, p]) => {
+      if (p && p.endsAt > Date.now()) activePowers[id] = p;
+    });
+  }
+
+  // restore & apply the active skin
+  const s = skins.find(k => k.id === d.activeSkin && k.owned);
+  if (s) {
+    skins.forEach(k => clickBtn.classList.remove(k.cls));
+    clickBtn.classList.add(s.cls);
+    activeSkin = s.id;
+  }
+}
+
+function resetGame() {
+  if (!confirm('Wirklich den gesamten Spielstand unwiderruflich löschen?')) return;
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  location.reload();
+}
+
+loadGame();
 update();
+
+// autosave every 5s, on tab-hide (wichtig für Handy) und beim Schließen
+setInterval(saveGame, 5000);
+window.addEventListener('beforeunload', saveGame);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
+document.getElementById('resetBtn').addEventListener('click', resetGame);
 
 /* ---------- chiptune music (unchanged engine) ---------- */
 let audioCtx = null, musicPlaying = false, musicIntervals = [];
