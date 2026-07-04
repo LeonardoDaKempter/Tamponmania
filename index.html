@@ -584,6 +584,16 @@ const skins = [
 ];
 let activeSkin = "classic";
 
+/* ---------- global price scaling: streckt die Spielzeit ~10x ---------- */
+/* Einnahmen bleiben gleich, alle Preise x10 -> es dauert rund 10x so lange.
+   Wird bei jedem Laden auf die frischen Array-Literale angewandt (nicht im Save). */
+const PRICE_SCALE = 10;
+upgrades.forEach(u => u.baseCost *= PRICE_SCALE);
+clickUpgrades.forEach(u => u.baseCost *= PRICE_SCALE);
+specialUpgrades.forEach(u => u.cost *= PRICE_SCALE);
+powerUps.forEach(p => p.cost *= PRICE_SCALE);
+skins.forEach(s => s.cost *= PRICE_SCALE);
+
 /* ---------- elements ---------- */
 const countEl = document.getElementById('count');
 const cpsEl = document.getElementById('cps');
